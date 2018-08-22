@@ -3,7 +3,7 @@
 #define LED_DATA_PIN     7
 #define LED_CLOCK_PIN     9
 #define NUM_LEDS    12
-#define BRIGHTNESS  40
+#define BRIGHTNESS  60
 #define LED_TYPE    LPD8806
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];
@@ -36,7 +36,7 @@ TBlendType    currentBlending;
 const int LIGHT_PIN = A0; // Pin connected to voltage divider output
 const float VCC = 4.98; // Measured voltage of Ardunio 5V line
 const float R_DIV = 4660.0; // Measured resistance of 3.3k resistor
-const float DARK_THRESHOLD = 10000.0;
+const float DARK_THRESHOLD = 14000.0;
 
 /********* Setup Loop *************/
 void setup() {
@@ -48,6 +48,7 @@ void setup() {
     currentBlending = LINEARBLEND;
 
       pinMode(LIGHT_PIN, INPUT);
+      Serial.begin(9600);
 
 }
 
@@ -55,7 +56,9 @@ void setup() {
 void loop()
 {
    int lightADC = analogRead(LIGHT_PIN);
-  if (lightADC > 0)
+   Serial.print("Light");
+   Serial.println(lightADC);
+  if (lightADC < 250)
   {
     // Use the ADC reading to calculate voltage and resistance
     float lightV = lightADC * VCC / 1023.0;
@@ -66,21 +69,21 @@ void loop()
     // If resistance of photocell is greater than the dark
     // threshold setting, turn the LED on.
     if (lightR >= DARK_THRESHOLD){
-      ChangePalettePeriodically();
-      
-      static uint8_t startIndex = 0;
-      startIndex = startIndex + 1; /* motion speed */
-      
-      FillLEDsFromPaletteColors( startIndex);
-      
-      FastLED.show();
-      FastLED.delay(1000 / UPDATES_PER_SECOND);
+        ChangePalettePeriodically();
+        
+        static uint8_t startIndex = 0;
+        startIndex = startIndex + 1; /* motion speed */
+        
+        FillLEDsFromPaletteColors( startIndex);
+        
+        FastLED.show();
+        FastLED.delay(1000 / UPDATES_PER_SECOND);
     }
-    else{
-     fill_solid( currentPalette, 16, CRGB::Black);
-    }
-    
-    }
+  }
+   else{
+     wipeLEDColors();
+     FastLED.show();
+     FastLED.delay(1000 / UPDATES_PER_SECOND);     }
   }
 
 /********* Fill From Palette *************/
@@ -128,3 +131,12 @@ void SetupTotallyRandomPalette()
     }
 }
 
+/********* Wipe Palette *************/
+void wipeLEDColors()
+{
+    uint8_t brightness = 255;
+    
+    for( int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::Black;
+    }
+}
